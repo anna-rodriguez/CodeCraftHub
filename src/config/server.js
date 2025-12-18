@@ -1,12 +1,13 @@
-const express = require('express');
-const cors = require('cors');
-const bodyParser = require('body-parser');
+import express from 'express';
+import cors from 'cors';
+import pkg from 'body-parser';
+const { json } = pkg;
 
 const initServer = () => {
     const app = express();
     app.use(cors());
-    app.use(bodyParser.json());
+    app.use(json());
     return app;
 };
 
-module.exports = initServer;
+export default initServer;

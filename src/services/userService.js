@@ -1,6 +1,10 @@
-const User = require('../models/userModel');
-const bcrypt = require('bcrypt');
-const jwt = require('jsonwebtoken');
+import User from '../models/userModel.js';
+
+import bcryptPkg from 'bcryptjs';
+const { hash, compare } = bcryptPkg;
+
+import pkg from 'jsonwebtoken';
+const { sign } = pkg;
 
 // Function to create a new user
 const createUser = async (userData) => {
@@ -13,7 +17,7 @@ const createUser = async (userData) => {
     }
 
     // Hash the password before saving
-    const hashedPassword = await bcrypt.hash(password, 10);
+    const hashedPassword = await hash(password, 10);
 
     // Create a new user instance
     const newUser = new User({
@@ -34,44 +38,22 @@ const findUserByEmail = async (email) => {
 
 // Function to authenticate a user
 const authenticateUser = async (email, password) => {
-    const user = await findUserByEmail(email);
+    const user = await User.findOne({ email });
     if (!user) {
-        throw new Error('Invalid email or password');
+        throw new Error('User not found');
     }
 
-    // Compare the provided password with the stored hashed password
-    const isMatch = await bcrypt.compare(password, user.password);
+    const isMatch = await compare(password, user.password);
     if (!isMatch) {
-        throw new Error('Invalid email or password');
+        throw new Error('Invalid password');
     }
 
-    // Generate a JWT token
-    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
+    // Generate JWT token (example, adjust secret and options as needed)
+    const token = sign({ id: user._id, email: user.email }, process.env.JWT_SECRET, {
+        expiresIn: '1h',
+    });
+
     return { user, token };
 };
 
-// Function to update user details
-const updateUser = async (userId, updateData) => {
-    const updatedUser = await User.findByIdAndUpdate(userId, updateData, { new: true });
-    if (!updatedUser) {
-        throw new Error('User not found');
-    }
-    return updatedUser;
-};
-
-// Function to delete a user
-const deleteUser = async (userId) => {
-    const deletedUser = await User.findByIdAndDelete(userId);
-    if (!deletedUser) {
-        throw new Error('User not found');
-    }
-    return deletedUser;
-};
-
-module.exports = {
-    createUser,
-    findUserByEmail,
-    authenticateUser,
-    updateUser,
-    deleteUser,
-};
+export { createUser, findUserByEmail, authenticateUser };

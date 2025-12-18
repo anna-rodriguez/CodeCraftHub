@@ -1,13 +1,15 @@
-const request = require('supertest');
-const { app } = require('../config/server');
-const userService = require('../services/userService');
+import request from 'supertest';
+import initServer from '../config/server.js';
+import { createUser } from '../services/userService.js';
 
 jest.mock('../services/userService');
+
+const app = initServer();  // Initialize app here
 
 describe('User Controller', () => {
     describe('POST /register', () => {
         it('should register a user successfully', async () => {
-            userService.createUser.mockResolvedValue({
+            createUser.mockResolvedValue({
                 username: 'testuser',
                 email: 'test@example.com',
             });
@@ -23,7 +25,7 @@ describe('User Controller', () => {
         });
 
         it('should return an error if user already exists', async () => {
-            userService.createUser.mockRejectedValue(new Error('User already exists'));
+            createUser.mockRejectedValue(new Error('User already exists'));
 
             const response = await request(app).post('/register').send({
                 username: 'testuser',
@@ -32,9 +34,7 @@ describe('User Controller', () => {
             });
 
             expect(response.status).toBe(400);
-            expect(response.body.message).toBe('User already exists');
+            expect(response.body.error).toBe('User already exists');
         });
     });
-
-    // Additional tests for login, etc.
 });
